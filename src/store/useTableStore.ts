@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+export type MaterialCategory = 'anodized' | 'wood' | 'slate';
+
 export interface TableParameters {
   tableLength: number;   // 0-100  → 桌面长
   tableWidth: number;    // 0-100  → 桌面宽
@@ -12,6 +14,7 @@ export interface TableParameters {
   colorHue: number;      // 0-360  → 色相
   metalness: number;     // 0-100  → 金属感
   roughness: number;     // 0-100  → 粗糙度
+  materialCategory: MaterialCategory; // 材质分类
 }
 
 interface TableState {
@@ -28,6 +31,9 @@ interface TableState {
   setScenePrompt: (prompt: string) => void;
   isCapturing: boolean;
   setIsCapturing: (isCapturing: boolean) => void;
+  // AI Home Integration
+  userHomePhoto: string | null;
+  setUserHomePhoto: (photo: string | null) => void;
 }
 
 const defaultParameters: TableParameters = {
@@ -42,6 +48,7 @@ const defaultParameters: TableParameters = {
   colorHue:   200,
   metalness:   0.8,
   roughness:   0.2,
+  materialCategory: 'anodized',
 };
 
 export const useTableStore = create<TableState>((set) => ({
@@ -60,4 +67,6 @@ export const useTableStore = create<TableState>((set) => ({
   setScenePrompt: (prompt) => set({ scenePrompt: prompt }),
   isCapturing: false,
   setIsCapturing: (isCapturing) => set({ isCapturing }),
+  userHomePhoto: null,
+  setUserHomePhoto: (userHomePhoto) => set({ userHomePhoto }),
 }));

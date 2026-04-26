@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import * as THREE from 'three';
-import { TableParameters } from '../../store/useTableStore';
+import { TableParameters, useTableStore } from '../../store/useTableStore';
+import { Outlines } from '@react-three/drei';
 
 interface TableModelProps {
   parameters: TableParameters;
@@ -42,7 +43,10 @@ export const TableModel: React.FC<TableModelProps> = ({ parameters }) => {
     colorHue,
     metalness,
     roughness,
+    materialCategory,
   } = parameters;
+
+  const [hovered, setHovered] = useState(false);
 
   // Normalize absolute units back to 0-100 range for the original model scaling logic
   const tL = ((tableLength - 1200) / 1200) * 100;
@@ -67,13 +71,35 @@ export const TableModel: React.FC<TableModelProps> = ({ parameters }) => {
   const CR  = (cR / 100) * Math.min(L, W) * 0.14; // 0 … ~0.13 corner R
   const TT  = 0.030; // table-top thickness (fixed)
 
-  const color = useMemo(() => hslToHex(colorHue, 70, 50), [colorHue]);
+  const color = useMemo(() => {
+    if (materialCategory === 'wood') {
+      return hslToHex(25, 40, 25 + (colorHue / 360) * 30); // Brownish range
+    }
+    if (materialCategory === 'slate') {
+      return hslToHex(colorHue, 5, 20); // Darker, desaturated
+    }
+    return hslToHex(colorHue, 70, 50);
+  }, [colorHue, materialCategory]);
   
-  const material = useMemo(() => new THREE.MeshStandardMaterial({
-    color,
-    metalness: met / 100,
-    roughness: rou / 100,
-  }), [color, met, rou]);
+  const material = useMemo(() => {
+    let m = 0, r = 0.5;
+    if (materialCategory === 'anodized') {
+      m = 0.85 + (met / 100) * 0.15;
+      r = 0.1 + (rou / 100) * 0.3;
+    } else if (materialCategory === 'wood') {
+      m = 0;
+      r = 0.6 + (rou / 100) * 0.4;
+    } else if (materialCategory === 'slate') {
+      m = 0.1;
+      r = 0.8 + (rou / 100) * 0.2;
+    }
+
+    return new THREE.MeshStandardMaterial({
+      color,
+      metalness: m,
+      roughness: r,
+    });
+  }, [color, materialCategory, met, rou]);
 
   const topShape = useMemo(() => roundedRectShape(L, W, CR), [L, W, CR]);
   const topGeo = useMemo(() => new THREE.ExtrudeGeometry(topShape, {
@@ -100,7 +126,11 @@ export const TableModel: React.FC<TableModelProps> = ({ parameters }) => {
   const lrLen    = Math.max(0.01, W - 2 * INS);  // left/right rail length
 
   return (
-    <group position={[0, LH, 0]}>
+    <group 
+      position={[0, LH, 0]}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+    >
       {/* Table Top */}
       <mesh 
         geometry={topGeo} 
@@ -109,7 +139,9 @@ export const TableModel: React.FC<TableModelProps> = ({ parameters }) => {
         position={[0, 0, 0]} 
         castShadow 
         receiveShadow 
-      />
+      >
+        {hovered && <Outlines thickness={0.01} color="white" />}
+      </mesh>
 
       {/* Legs */}
       {corners.map(([cx, cz], i) => (
@@ -121,29 +153,32 @@ export const TableModel: React.FC<TableModelProps> = ({ parameters }) => {
             0,
             FLARE > 0.001 ? -Math.sign(cx) * FLARE : 0
           ]}
+          material={material}
           castShadow 
           receiveShadow
         >
           <boxGeometry args={[LW, LH, LW]} />
-          <primitive object={material} attach="material" />
+          {hovered && <Outlines thickness={0.01} color="white" />}
         </mesh>
       ))}
 
       {/* Apron rails */}
-      {/* Front & back rails */}
       <mesh position={[0, apronY, legZ]} material={material} castShadow receiveShadow>
         <boxGeometry args={[fbLen, AH, apronT]} />
+        {hovered && <Outlines thickness={0.01} color="white" />}
       </mesh>
       <mesh position={[0, apronY, -legZ]} material={material} castShadow receiveShadow>
         <boxGeometry args={[fbLen, AH, apronT]} />
+        {hovered && <Outlines thickness={0.01} color="white" />}
       </mesh>
 
-      {/* Left & right rails */}
       <mesh position={[legX, apronY, 0]} material={material} castShadow receiveShadow>
         <boxGeometry args={[apronT, AH, lrLen]} />
+        {hovered && <Outlines thickness={0.01} color="white" />}
       </mesh>
       <mesh position={[-legX, apronY, 0]} material={material} castShadow receiveShadow>
         <boxGeometry args={[apronT, AH, lrLen]} />
+        {hovered && <Outlines thickness={0.01} color="white" />}
       </mesh>
     </group>
   );

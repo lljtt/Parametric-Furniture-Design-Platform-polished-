@@ -86,7 +86,9 @@ export const CaptureButton: React.FC = () => {
       });
 
       if (newImages.length > 0) {
-        setGeneratedImages(newImages);
+        setGeneratedImages([dataUrl, ...newImages]);
+      } else {
+        setGeneratedImages([dataUrl]);
       }
     } catch (error) {
       console.error('Rendering Error:', error);

@@ -137,6 +137,13 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-white/20;
   }
+  @keyframes scale-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .scale-anim {
+    animation: scale-pulse 2s infinite ease-in-out;
+  }
 }
 
 @layer base {

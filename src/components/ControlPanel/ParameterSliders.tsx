@@ -5,8 +5,14 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { ScrollArea } from '../ui/scroll-area';
 import { Card, CardContent } from '../ui/card';
-import { Box, Layout, Palette, Database, Eye, ChevronUp, ChevronDown } from 'lucide-react';
+import { Box, Layout, Palette, Database, Eye, ChevronUp, ChevronDown, Shield, Trees, Box as BoxIcon } from 'lucide-react';
 import { hslToHex } from '../ThreeViewer/TableModel';
+
+const materialOptions = [
+  { id: 'anodized', label: '金属阳极氧化', icon: Shield },
+  { id: 'wood', label: '实木纹理', icon: Trees },
+  { id: 'slate', label: '哑光岩板', icon: BoxIcon },
+] as const;
 
 interface ParameterConfig {
   key: keyof TableParameters;
@@ -149,7 +155,7 @@ export const ParameterSliders: React.FC = () => {
                         {config.label}
                       </Label>
                       <NumberInput 
-                        value={parameters[config.key]} 
+                        value={parameters[config.key] as number} 
                         min={config.min} 
                         max={config.max} 
                         step={config.step} 
@@ -168,7 +174,7 @@ export const ParameterSliders: React.FC = () => {
                             min={config.min}
                             max={config.max}
                             step={config.step}
-                            value={[parameters[config.key] ?? 0]}
+                            value={[parameters[config.key] as number ?? 0]}
                             onValueChange={(val) => handleChange(config.key, val[0])}
                             className="absolute inset-0 w-full"
                           />
@@ -179,7 +185,7 @@ export const ParameterSliders: React.FC = () => {
                           min={config.min}
                           max={config.max}
                           step={config.step}
-                          value={[parameters[config.key] ?? 0]}
+                          value={[parameters[config.key] as number ?? 0]}
                           onValueChange={(val) => handleChange(config.key, val[0])}
                         />
                       )}
@@ -189,6 +195,63 @@ export const ParameterSliders: React.FC = () => {
               </div>
             </div>
           ))}
+
+          {/* New Material Selection Section in Sidebar */}
+          <div className="bg-white/40 backdrop-blur-md p-4 rounded-[2rem] border border-white/30 space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 bg-white/50 rounded-full flex items-center justify-center">
+                <Palette size={14} className="text-primary" />
+              </div>
+              <h3 className="text-[10px] font-bold text-slate-700 tracking-[0.15em] uppercase">材质预设</h3>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              {materialOptions.map((opt) => {
+                const isActive = parameters.materialCategory === opt.id;
+                
+                // Sphere styles based on material
+                const getSphereStyle = () => {
+                  switch (opt.id) {
+                    case 'anodized':
+                      return {
+                        background: `radial-gradient(circle at 30% 30%, ${hexColor}, oklch(0.4 0.1 210))`,
+                        boxShadow: `inset -2px -2px 6px rgba(0,0,0,0.5), inset 2px 2px 6px rgba(255,255,255,0.4)`
+                      };
+                    case 'wood':
+                      return {
+                        background: `radial-gradient(circle at 30% 30%, oklch(0.7 0.08 45), oklch(0.3 0.1 30))`,
+                        boxShadow: `inset -2px -2px 8px rgba(0,0,0,0.4), inset 2px 2px 4px rgba(255,255,255,0.1)`
+                      };
+                    case 'slate':
+                      return {
+                        background: `radial-gradient(circle at 30% 30%, oklch(0.5 0.01 240), oklch(0.2 0.01 240))`,
+                        boxShadow: `inset -1px -1px 10px rgba(0,0,0,0.6), inset 1px 1px 2px rgba(255,255,255,0.05)`
+                      };
+                  }
+                };
+
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setParameters({ materialCategory: opt.id })}
+                    className="flex flex-col items-center group gap-2"
+                  >
+                    <div className={`
+                      w-12 h-12 rounded-full transition-all duration-300 relative
+                      ${isActive ? 'scale-110 ring-2 ring-primary ring-offset-2 ring-offset-transparent' : 'opacity-70 grayscale hover:opacity-100 hover:grayscale-0'}
+                    `}
+                    style={getSphereStyle()}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-white/10 rounded-full" />
+                    </div>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider transition-colors ${isActive ? 'text-primary' : 'text-slate-400'}`}>
+                      {opt.label.replace('纹理', '').replace('阳极氧化', '').replace('哑光', '')}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Real-time Data Grid */}
           <div className="bg-white/30 backdrop-blur-md p-4 rounded-[2rem] border border-white/20 space-y-4">
@@ -200,14 +263,19 @@ export const ParameterSliders: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(parameters).map(([key, value]) => {
-                if (typeof value !== 'number') return null;
                 const config = sections.flatMap(s => s.params).find(p => p.key === key);
-                if (!config) return null;
+                if (!config && key !== 'materialCategory') return null;
+                
+                const label = config ? config.label : '当前材质';
+                const displayValue = key === 'materialCategory' 
+                  ? materialOptions.find(o => o.id === value)?.label.slice(0, 2)
+                  : `${value}${config?.unit || ''}`;
+
                 return (
                   <div key={key} className="bg-white/40 p-2.5 rounded-2xl border border-white/20 flex flex-col items-center justify-center gap-0.5">
-                    <span className="text-[9px] font-bold text-slate-400 text-center uppercase tracking-wider">{config.label}</span>
-                    <span className="text-[12px] font-bold text-primary font-mono tracking-tight">
-                      {value}{config.unit}
+                    <span className="text-[9px] font-bold text-slate-400 text-center uppercase tracking-wider">{label}</span>
+                    <span className="text-[11px] font-bold text-primary font-mono tracking-tight overflow-hidden text-ellipsis whitespace-nowrap w-full text-center">
+                      {displayValue}
                     </span>
                   </div>
                 );

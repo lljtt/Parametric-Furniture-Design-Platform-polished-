@@ -98,6 +98,7 @@ export const ChatBot: React.FC = () => {
         
         Object.entries(result.updatedParameters).forEach(([key, value]) => {
           if (validKeys.includes(key) && typeof value === 'number' && !isNaN(value)) {
+            // @ts-ignore - We know these are numeric parameters
             sanitizedParams[key as keyof TableParameters] = value;
           }
         });

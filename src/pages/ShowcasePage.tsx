@@ -13,6 +13,7 @@ import {
   FileDown
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { AIHomeCustomizer } from '../components/AIIntegration/AIHomeCustomizer';
 import { hslToHex } from '../components/ThreeViewer/TableModel';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -20,8 +21,9 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 export const ShowcasePage: React.FC = () => {
-  const { parameters, setViewMode, generatedImages, currentImageIndex, setCurrentImageIndex } = useTableStore();
+  const { parameters, setViewMode, generatedImages, currentImageIndex, setCurrentImageIndex, userHomePhoto } = useTableStore();
   const [showDetails, setShowDetails] = React.useState(false);
+  const [isHomeCustomizerOpen, setIsHomeCustomizerOpen] = React.useState(false);
 
   const adsCopy = [
     "晨曦微光穿透落地窗，科技感十足的金属线条在光影中跃动，为您开启诗意办公。设计不仅是形态，更是对生活质感的无声告白。",
@@ -296,6 +298,31 @@ export const ShowcasePage: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Thumbnail Strip with Upload Button */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 px-1 custom-scrollbar shrink-0">
+                    {generatedImages.map((img, i) => (
+                      <button 
+                        key={i}
+                        onClick={() => setCurrentImageIndex(i)}
+                        className={cn(
+                          "w-16 h-10 rounded-lg overflow-hidden border-2 transition-all shrink-0",
+                          currentImageIndex === i ? "border-primary scale-105" : "border-transparent opacity-60 hover:opacity-100"
+                        )}
+                      >
+                        <img src={img} alt={`Thumb ${i}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                    <button 
+                      onClick={() => setIsHomeCustomizerOpen(true)}
+                      className="w-16 h-10 rounded-lg border-2 border-dashed border-white/40 bg-white/20 flex flex-col items-center justify-center gap-0.5 shrink-0 hover:bg-white/40 hover:border-primary/40 transition-all text-slate-500"
+                    >
+                      <div className="w-4 h-4 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Sparkles size={10} className="text-primary" />
+                      </div>
+                      <span className="text-[7px] font-bold uppercase tracking-tighter">上传我家</span>
+                    </button>
+                  </div>
+
                   <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0">
                     <div className="bg-white/40 p-4 rounded-xl border border-white/20">
                       <p className="text-[11px] text-slate-600 leading-relaxed font-serif italic text-center px-2">
@@ -391,6 +418,10 @@ export const ShowcasePage: React.FC = () => {
           ))}
         </div>
       </div>
+      <AIHomeCustomizer 
+        isOpen={isHomeCustomizerOpen} 
+        onClose={() => setIsHomeCustomizerOpen(false)} 
+      />
     </div>
   );
 };
