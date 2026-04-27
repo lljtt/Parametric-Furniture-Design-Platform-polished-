@@ -3,6 +3,7 @@ import { useTableStore } from '../store/useTableStore';
 import { FileDown, Download, Share2, Star, Settings2, FileText, Sparkles, Box, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { AIHomeCustomizer } from '../components/AIIntegration/AIHomeCustomizer';
+import { SocialShareModal } from '../components/AIIntegration/SocialShareModal';
 import { hslToHex } from '../components/ThreeViewer/TableModel';
 import { createTableObject } from '../lib/tableExporter';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
@@ -15,6 +16,7 @@ export const ShowcasePage: React.FC = () => {
   const { parameters, setViewMode, generatedImages, currentImageIndex, setCurrentImageIndex, userHomePhoto } = useTableStore();
   const [showDetails, setShowDetails] = React.useState(false);
   const [isHomeCustomizerOpen, setIsHomeCustomizerOpen] = React.useState(false);
+  const [isSocialShareOpen, setIsSocialShareOpen] = React.useState(false);
   const [isExporting, setIsExporting] = React.useState(false);
 
   const adsCopy = [
@@ -389,6 +391,7 @@ export const ShowcasePage: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   onPointerDown={(e) => e.stopPropagation()} 
+                  onClick={() => setIsSocialShareOpen(true)}
                   className="bg-white/30 hover:bg-white/50 text-slate-600 border border-white/20 rounded-xl flex items-center justify-center gap-2 h-11 transition-all"
                 >
                   <Share2 size={15} />
@@ -434,6 +437,10 @@ export const ShowcasePage: React.FC = () => {
       <AIHomeCustomizer 
         isOpen={isHomeCustomizerOpen} 
         onClose={() => setIsHomeCustomizerOpen(false)} 
+      />
+      <SocialShareModal
+        isOpen={isSocialShareOpen}
+        onClose={() => setIsSocialShareOpen(false)}
       />
     </div>
   );
