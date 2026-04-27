@@ -25,7 +25,7 @@ export const AIHomeCustomizer: React.FC<{ isOpen: boolean; onClose: () => void }
   const [isGenerating, setIsGenerating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { generatedImages, setGeneratedImages, setCurrentImageIndex } = useTableStore();
+  const { generatedImages, setGeneratedImages, setCurrentImageIndex, capturedSnapshot } = useTableStore();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,6 +40,13 @@ export const AIHomeCustomizer: React.FC<{ isOpen: boolean; onClose: () => void }
       reader.readAsDataURL(file);
     }
   };
+
+  // Reset step when opening
+  React.useEffect(() => {
+    if (isOpen) {
+      setStep('upload');
+    }
+  }, [isOpen]);
 
   // Utility to resize images to prevent API timeout due to large payload
   const resizeImage = (base64Str: string, maxWidth = 768): Promise<string> => {
@@ -88,7 +95,8 @@ export const AIHomeCustomizer: React.FC<{ isOpen: boolean; onClose: () => void }
 
       // 3. Prepare assets
       console.log('Preparing assets for AI...');
-      const smallTableRender = await resizeImage(generatedImages[0], 800).catch(() => { throw new Error('读取设计模型图失败'); });
+      const sourceImage = capturedSnapshot || generatedImages[0];
+      const smallTableRender = await resizeImage(sourceImage, 800).catch(() => { throw new Error('读取设计模型图失败'); });
       const smallUserPhoto = await resizeImage(photoData, 1024).catch(() => { throw new Error('读取场景照片失败'); });
 
       const tableRenderBase64 = smallTableRender.split(',')[1];
@@ -158,7 +166,7 @@ export const AIHomeCustomizer: React.FC<{ isOpen: boolean; onClose: () => void }
 
       if (newImage) {
         setGeneratedImages([...generatedImages, newImage]);
-        setCurrentImageIndex(generatedImages.length);
+        setCurrentImageIndex(generatedImages.length); 
         setStep('done');
       } else {
         console.warn('AI Output (no image):', responseText);
@@ -343,12 +351,24 @@ export const AIHomeCustomizer: React.FC<{ isOpen: boolean; onClose: () => void }
                         </div>
                       </div>
                       
-                      <Button 
-                        onClick={onClose} 
-                        className="rounded-full px-10 h-12 bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-xl active:scale-95"
-                      >
-                        立即预览
-                      </Button>
+                      <div className="flex gap-3">
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setStep('upload');
+                            setTempPhoto(null);
+                          }} 
+                          className="rounded-full px-8 h-12 border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-all active:scale-95"
+                        >
+                          继续上传
+                        </Button>
+                        <Button 
+                          onClick={onClose} 
+                          className="rounded-full px-10 h-12 bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+                        >
+                          立即预览
+                        </Button>
+                      </div>
                     </div>
                   </motion.div>
                 )}

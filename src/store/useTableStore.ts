@@ -31,6 +31,8 @@ interface TableState {
   setScenePrompt: (prompt: string) => void;
   isCapturing: boolean;
   setIsCapturing: (isCapturing: boolean) => void;
+  capturedSnapshot: string | null;
+  setCapturedSnapshot: (snapshot: string | null) => void;
   // AI Home Integration
   userHomePhoto: string | null;
   setUserHomePhoto: (photo: string | null) => void;
@@ -67,6 +69,8 @@ export const useTableStore = create<TableState>((set) => ({
   setScenePrompt: (prompt) => set({ scenePrompt: prompt }),
   isCapturing: false,
   setIsCapturing: (isCapturing) => set({ isCapturing }),
+  capturedSnapshot: null,
+  setCapturedSnapshot: (capturedSnapshot) => set({ capturedSnapshot }),
   userHomePhoto: null,
   setUserHomePhoto: (userHomePhoto) => set({ userHomePhoto }),
 }));

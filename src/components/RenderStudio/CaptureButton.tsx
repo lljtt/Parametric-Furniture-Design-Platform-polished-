@@ -8,7 +8,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 export const CaptureButton: React.FC = () => {
   const [isRendering, setIsRendering] = useState(false);
-  const { scenePrompt, setIsCapturing, setGeneratedImages, setCurrentImageIndex, setViewMode } = useTableStore();
+  const { scenePrompt, setIsCapturing, setGeneratedImages, setCurrentImageIndex, setViewMode, setCapturedSnapshot } = useTableStore();
 
   const handleCaptureAndRender = async () => {
     setIsRendering(true);
@@ -31,7 +31,8 @@ export const CaptureButton: React.FC = () => {
       setIsCapturing(false);
 
       // 3. Navigate immediately to showcase view (with placeholder or initial image)
-      setGeneratedImages([dataUrl]);
+      setCapturedSnapshot(dataUrl);
+      setGeneratedImages([]); 
       setCurrentImageIndex(0);
       setViewMode('showcase');
 
@@ -85,11 +86,7 @@ export const CaptureButton: React.FC = () => {
         }
       });
 
-      if (newImages.length > 0) {
-        setGeneratedImages([dataUrl, ...newImages]);
-      } else {
-        setGeneratedImages([dataUrl]);
-      }
+      setGeneratedImages(newImages);
     } catch (error) {
       console.error('Rendering Error:', error);
       alert('Failed to generate rendering. Please try again.');
