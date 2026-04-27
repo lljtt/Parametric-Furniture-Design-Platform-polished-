@@ -1,20 +1,11 @@
 import React from 'react';
 import { useTableStore } from '../store/useTableStore';
-import { 
-  ChevronLeft, 
-  ChevronRight,
-  Share2, 
-  Download, 
-  Box, 
-  Star, 
-  Settings2,
-  FileText,
-  Sparkles,
-  FileDown
-} from 'lucide-react';
+import { FileDown, Download, Share2, Star, Settings2, FileText, Sparkles, Box, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { AIHomeCustomizer } from '../components/AIIntegration/AIHomeCustomizer';
 import { hslToHex } from '../components/ThreeViewer/TableModel';
+import { createTableObject } from '../lib/tableExporter';
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import JSZip from 'jszip';
@@ -24,6 +15,7 @@ export const ShowcasePage: React.FC = () => {
   const { parameters, setViewMode, generatedImages, currentImageIndex, setCurrentImageIndex, userHomePhoto } = useTableStore();
   const [showDetails, setShowDetails] = React.useState(false);
   const [isHomeCustomizerOpen, setIsHomeCustomizerOpen] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
 
   const adsCopy = [
     "晨曦微光穿透落地窗，科技感十足的金属线条在光影中跃动，为您开启诗意办公。设计不仅是形态，更是对生活质感的无声告白。",
@@ -69,6 +61,22 @@ export const ShowcasePage: React.FC = () => {
     
     const content = await zip.generateAsync({ type: "blob" });
     saveAs(content, `产品手册_TD0313_${new Date().getTime()}.zip`);
+  };
+
+  const handleExportModel = () => {
+    setIsExporting(true);
+    try {
+      const tableObject = createTableObject(parameters);
+      const exporter = new OBJExporter();
+      const result = exporter.parse(tableObject);
+      const blob = new Blob([result], { type: 'text/plain' });
+      saveAs(blob, `Table_Design_TD0313_${parameters.tableLength}x${parameters.tableWidth}.obj`);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('模型导出失败，请重试。');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const getParamLabel = (key: string) => {
@@ -162,9 +170,14 @@ export const ShowcasePage: React.FC = () => {
             <FileDown size={14} />
             下载产品手册
           </Button>
-          <Button variant="outline" className="h-9 rounded-full border-white/30 bg-white/40 backdrop-blur-sm text-slate-700 text-xs font-bold px-4 gap-2 shadow-none hover:bg-white/60">
-            <Download size={14} />
-            导出模型
+          <Button 
+            variant="outline" 
+            onClick={handleExportModel}
+            disabled={isExporting}
+            className="h-9 rounded-full border-white/30 bg-white/40 backdrop-blur-sm text-slate-700 text-xs font-bold px-4 gap-2 shadow-none hover:bg-white/60 disabled:opacity-50"
+          >
+            <Download size={14} className={isExporting ? "animate-pulse" : ""} />
+            {isExporting ? "正在导出..." : "导出模型"}
           </Button>
         </div>
       </header>
